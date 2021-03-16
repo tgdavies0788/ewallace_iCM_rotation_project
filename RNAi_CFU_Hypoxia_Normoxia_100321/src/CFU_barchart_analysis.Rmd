@@ -16,7 +16,7 @@ library(markdown)
 # Reading in csv dataset of CFU values (need to adjust to GitHub archive?)
 
 ```{r}
-rawdata <- read.csv("/Users/s2124188/Documents/Physical Rotations/Wallace & Bayne/CFU Assays/RNAi_CFU_Tidy.csv")
+rawdata <- read.csv("../input/RNAi_CFU_Tidy.csv")
 ```
 
 #Producing mean summary across bioreps for each day condition and strain. 
