@@ -1,0 +1,14 @@
+Growth curve datasets and analysis of two RNAi mutants, Dcr1-2 and Rdp1 plus Jec21 wild type control over 5 days in two temperature conditions and two 
+media conditions, YNP and YPD. 
+
+src 
+
+Scripts for dataprocessing.
+
+Input
+
+Input .csv files for data analysis. 
+
+  - 20210219_JEC21RNAimut_SetupCSV.csv: Plate setup file for labelling of strains/ replicates. 
+  - 20210219_JEC21RNAimut_30_TD.xlsx: Raw datafile from platereader, transposed below. 
+  - 20210219_JEC21RNAimut_3(0/7)_TD_TRSP.csv: Transposed raw dataset for data analysis. 
