@@ -1,0 +1,415 @@
+---
+title: "Plate Reader JEC21RNAimutants 30 degrees"
+author: "Liz Hughes and Thom Davies"
+date: "23-02-21"
+output:
+  html_document:
+    toc: yes
+    toc_depth: 2
+  pdf_document:
+    toc: yes
+    toc_depth: '2'
+  word_document:
+    toc: yes
+    toc_depth: '2'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#Plate reader assay.
+
+##Set up to test 2 different growth conditions in Jec21 cells compared to RNAi deletion mutants, dcR1-2 and RdRp1.
+##3 Bioreps, 3 Techreps each, 3 Strains (JEC21-3084, dcR1-2-6595, RdRp1-6594) and 1 Biorep, 3 Techreps for H99.
+##Grow 5ml culture from colony (1 colony = 1 Biorep)in YPD, 30C, 200 rpm ON.
+##Seed at OD 600nm = 0.2; 200 ul per well.
+##Run for 430 cycles.
+
+```{r}
+library("reshape2")
+library(dplyr)
+library(ggplot2)
+library(tidyverse)
+library(markdown)
+
+
+```
+
+
+
+# Read in transposed data as csv file
+
+## ~/Documents/Edward Wallace/R/R files/Data/2021/        replace this with your path
+## 20210219_JEC21RNAimut_30_TD_TRSP.csv                   this is the file name
+
+```{r}
+rawdata <- read.csv("../input/20210219_JEC21RNAimut_30_TD_TRSP.csv")
+
+view(rawdata)
+```
+
+# Change time in seconds to time in hours
+
+```{r}
+ rawdata_hrs<-mutate(rawdata, Time = Time/3600)
+
+```
+
+# Tidy the data using the melt function from reshape2
+
+```{r}
+reshaped <- melt(rawdata_hrs, id=c("Time", "Temp"), variable.name="Well",
+                 value.name="OD595")
+
+
+summary(reshaped)
+```
+
+# Read in the Plate map data from csv file
+
+## ~/Documents/Edward Wallace/R/R files/Data/2021/        replace this with your path
+## 20210219_JEC21RNAimut_SetupCSV.csv                     this is the file name
+
+```{r}
+
+platemap <- read.csv("../input/20210219_JEC21RNAimut_SetupCSV.csv ")
+head(platemap, n=10)
+
+
+```
+
+
+# Combine the reshaped data with the plate map, pairing them by Well
+
+```{r}
+annotated <- inner_join(reshaped, platemap, by="Well")
+ 
+View(annotated)
+
+```
+
+
+# Write the annotated data set to a CSV file
+
+## ~/Documents/Edward Wallace/Lab based work/Thom Davies project/        replace this with your path
+## 20210219_JEC21RNAimut_30_annotated.csv                                this is the file name
+
+```{r}
+write.csv(annotated, "~/Documents/Edward Wallace/Lab based work/Thom Davies project/20210219_JEC21RNAimut_30_annotated.csv")
+```
+
+
+#Plot all ODs unnormalised
+
+## Do this as check on the data by strain and medium
+
+```{r plot_all_ODs}
+
+ggplot(data=annotated, aes(x=Time, y=OD595, color=Strain, group = Well)) + 
+       geom_line() + 
+       theme_bw()+
+       facet_grid(Medium ~ .) +
+       labs(x="Time (hrs)", y="Absorbance at 595 nm")
+```
+
+#Plot all ODs by Medium, unnormalised
+
+## This allows you to check the data by medium
+
+```{r plot_all_ODs_bymedium}
+
+ggplot(data=annotated, aes(x=Time, y=OD595, color=Medium, group=Well)) + 
+       geom_line() + 
+       theme_bw()+
+       facet_grid(Strain ~ .) +
+       labs(x="Time (hrs)", y="Absorbance at 595 nm")
+```
+
+# Which wells grow to higher OD?
+
+## This helps you to pinpoint any outliers or odd wells with a much higher OD.
+
+```{r find_wells_highOD}
+
+annotated %>%
+  group_by(Well) %>% 
+  summarise(maxOD=max(OD595)) %>%
+  arrange(desc(maxOD))
+```
+
+
+
+# Which wells have higher OD in YPD for JEC21
+
+## You can check all the strains by changing filter(Strain=="JEC21-3084") or medium by changing filter(Medium=="YPD")
+
+```{r find_wells_highOD YPD}
+
+annotated %>%
+  group_by(Well) %>% 
+  filter(Strain=="JEC21-3084") %>%
+  filter(Medium=="YPD") %>%
+  summarise(maxOD=max(OD595)) %>%
+  arrange(desc(maxOD))
+```
+
+
+## Which wells have higher OD in YNB for JEC21
+
+```{r find_wells_highOD YNB}
+
+annotated %>%
+  group_by(Well) %>% 
+  filter(Strain=="JEC21-3084") %>%
+  filter(Medium=="YNB") %>%
+  summarise(maxOD=max(OD595)) %>%
+  arrange(desc(maxOD))
+```
+These are much lower than YPD, as expected.
+
+
+
+# How stable are ODs of blank wells, to use for normalisation?
+
+```{r plot_blank_ODs}
+
+ggplot(data=filter(annotated,Strain==""), 
+       aes(x=Time, y=OD595, color=Strain, group = Well)) + 
+       geom_line() + 
+       theme_bw()+
+       facet_grid(Medium ~ .) +
+       labs(x="Time (hrs)", y="Absorbance at 595 nm")
+```
+
+These are very stable.
+
+
+
+# Use this to check a particular well if the blanks look a bit weird.
+## We will check A6
+
+```{r plot_A6}
+
+ggplot(data=filter(annotated,Well=="A6"), 
+      
+       aes(x=Time, y=OD595, color=Strain, group = Well)) + 
+       geom_line() + 
+       theme_bw()+
+       facet_grid(Medium ~ .) +
+       labs(x="Time (hrs)", y="Absorbance at 595 nm")
+
+```
+This is a single plot for well A6, YPD blank.
+
+
+```{r plot_A12}
+
+ggplot(data=filter(annotated,Well=="A12"), 
+      
+       aes(x=Time, y=OD595, color=Strain, group = Well)) + 
+       geom_line() + 
+       theme_bw()+
+       facet_grid(Medium ~ .) +
+       labs(x="Time (hrs)", y="Absorbance at 595 nm")
+
+```
+This is a single plot for well A6, YNB blank.
+
+# Check OD of blank wells by medium
+
+
+```{r find_wells_highOD blanks}
+annotated %>%
+  group_by(Well, Medium) %>% 
+  filter(Strain=="") %>%
+  
+  summarise(maxOD=max(OD595)) %>%
+  arrange(desc(maxOD))
+```
+YPD>YNB
+All the blank wells look ok to use.
+
+
+## Calculate median OD for blank wells to use to normalise data.
+
+```{r calc_blank_medians}
+
+blank_OD_summary <- annotated %>%
+  filter(Strain=="") %>%
+  group_by(Medium) %>%
+  summarise(OD_median=median(OD595),
+            OD_mean=mean(OD595),
+            OD_max=max(OD595),
+            OD_min=min(OD595))
+print(blank_OD_summary)
+```
+These all look good.
+
+
+
+# Subtract blank OD to make corrected OD and Plot OD_corrected v Time (hrs)
+## Normalize data
+
+```{r subtract_blank_OD}
+
+normalisedOD <- annotated %>%
+  left_join(blank_OD_summary, by="Medium") %>%
+  mutate(OD_corrected = OD595 - OD_median)
+
+view(normalisedOD)
+```
+
+
+
+#Plot all OD corrected (or normalized)
+
+```{r plot_all_OD_corrected}
+
+ggplot(data=filter(normalisedOD,Strain !=""),  aes(x=Time, y=OD_corrected, color=Strain, group = Well)) + 
+       geom_line() + 
+       facet_grid(Medium ~ .) +
+       theme_bw()+
+       labs(x = "Time(Hrs)") +
+       labs(y = "Absorbance 595nm")
+```
+
+
+
+
+
+```{r plot_all_OD_corrected_zoom for YNB}
+
+ggplot(data=normalisedOD %>%
+         filter(Strain != "", Medium =="YNB"), 
+       aes(x=Time, y=OD_corrected, color=Strain, group = Well)) + 
+       geom_line() + 
+       theme_bw() +
+         labs(x = "Time(Hrs)") +
+         labs(y = "Absorbance 595nm") +
+         labs(title = "Growth in YNB") +
+       theme(text = element_text(size = 20))+
+       scale_color_brewer(palette="Set1")
+```
+
+
+```{r plot_all_OD_corrected_zoom for YNB wrap}
+
+ggplot(data=normalisedOD %>%
+         filter(Strain != "", Medium =="YNB"), 
+       aes(x=Time, y=OD_corrected, color=Strain, group = Well)) + 
+       geom_line() + 
+       facet_wrap(BioRep ~ .)+
+       theme_bw() +
+         scale_y_continuous(trans = 'log10')+
+         labs(x = "Time(Hrs)") +
+         labs(y = "Absorbance 595nm") +
+         labs(title = "Growth in YNB") +
+       theme(text = element_text(size = 20))+
+       scale_color_brewer(palette="Set1")
+```
+
+
+
+# Plot for H99 only
+
+```{r plot_all_OD_corrected for H99 only wrap}
+
+ggplot(data=normalisedOD %>%
+         filter(Strain == "H99"), 
+         aes(Time, OD_corrected, group = Well, colour = Medium)) + 
+         geom_line() +
+         geom_hline(aes(yintercept=0.1), linetype="dotted", colour="black") +
+         facet_wrap(BioRep ~ .) +
+         theme_bw() +
+         scale_y_continuous(limits=c(0,2),expand=c(0,0)) +
+         labs(x = "Time(Hrs)") +
+         labs(y = "Absorbance 595nm") +
+         labs(title = "H99") +
+         theme(text = element_text(size = 10))+
+         scale_color_brewer(palette="Set1")
+
+
+   
+```
+
+
+# Plot for JEC21-3084 only
+
+```{r plot_all_OD_corrected for JEC21-3084 only wrap}
+
+ggplot(data=normalisedOD %>%
+         filter(Strain == "JEC21-3084"), 
+         aes(Time, OD_corrected, group = Well, colour = Medium)) + 
+         geom_line() +
+         geom_hline(aes(yintercept=0.1), linetype="dotted", colour="black") +
+         facet_wrap(BioRep ~ .) +
+         theme_bw() +
+         scale_y_continuous(limits=c(0,2),expand=c(0,0)) +
+         labs(x = "Time(Hrs)") +
+         labs(y = "Absorbance 595nm") +
+         labs(title = "JEC21-3084") +
+         theme(text = element_text(size = 10))+
+         scale_color_brewer(palette="Set1")
+
+```
+
+# Plot for dcR1-2-6595 only
+
+```{r plot_all_OD_corrected for dcR1-2-6595 only}
+ggplot(data=normalisedOD %>%
+         filter(Strain == "dcR1-2-6595"), 
+         aes(Time, OD_corrected, group = Well, colour = Medium)) + 
+         geom_line() +
+         geom_hline(aes(yintercept=0.1), linetype="dotted", colour="black") +
+         facet_wrap(BioRep ~ .) +
+         theme_bw() +
+         scale_y_continuous(limits=c(0,2),expand=c(0,0)) +
+         labs(x = "Time(Hrs)") +
+         labs(y = "Absorbance 595nm") +
+         labs(title = "dcR1-2-6595") +
+         theme(text = element_text(size = 10))+
+         scale_color_brewer(palette="Set1")
+```
+
+# Plot for RdRp1-6594 only
+```{r plot_all_OD_corrected for RdRp1-6594}
+ggplot(data=normalisedOD %>%
+         filter(Strain == "RdRp1-6594"), 
+         aes(Time, OD_corrected, group = Well, colour = Medium)) + 
+         geom_line() +
+         geom_hline(aes(yintercept=0.1), linetype="dotted", colour="black") +
+         facet_wrap(BioRep ~ .) +
+         theme_bw() +
+         scale_y_continuous(limits=c(0,2),expand=c(0,0)) +
+         labs(x = "Time(Hrs)") +
+         labs(y = "Absorbance 595nm") +
+         labs(title = "RdRp1-6594") +
+         theme(text = element_text(size = 10))+
+         scale_color_brewer(palette="Set1")
+```
+
+
+
+# Plot for All strains and media by BioRep
+
+```{r plot_all_OD_corrected for all wrap}
+
+ggplot(data=normalisedOD %>%
+         filter(Strain != ""),
+       aes(Time, OD_corrected, colour = Strain, group = Well)) + 
+       geom_line() + 
+       geom_hline(aes(yintercept=0.5), linetype="dotted", colour="black") +
+       facet_wrap(BioRep ~ .) +
+       theme_bw() +
+        scale_y_continuous(limits=c(0,1.5),expand=c(0,0)) +
+        labs(x = "Time(Hrs)") +
+        labs(y = "Absorbance 595nm") +
+      theme(text = element_text(size = 10))+
+      scale_color_brewer(palette="Set1")
+
+```
+
+
+
+

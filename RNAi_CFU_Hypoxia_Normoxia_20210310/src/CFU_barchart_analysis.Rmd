@@ -1,0 +1,51 @@
+---
+title: "RNAi_Mutant_Hypoxia_Normoxia_CFU_Assay"
+output: html_document
+---
+
+#Loading Libraries. 
+
+```{r}
+library(reshape2)
+library(dplyr)
+library(ggplot2)
+library(tidyverse)
+library(markdown)
+```
+
+# Reading in csv dataset of CFU values (need to adjust to GitHub archive?)
+
+```{r}
+rawdata <- read.csv("../input/RNAi_CFU_Tidy.csv")
+```
+
+#Producing mean summary across bioreps for each day condition and strain. 
+
+```{r}
+rawdata_stats <- rawdata %>% 
+  group_by(Day, Condition, Strain) %>% 
+  summarise(CFU_mean = mean(CFU))
+```
+
+#Plotting CFU across timepoints and conditions. 
+
+```{r}
+#Mutate Day variable to factor, allowing us to plot it categorically. 
+rawdata_stats <- rawdata_stats  %>% 
+  mutate(Day = as.factor(Day))
+
+#Creating a label list for the plot generation, more informative then 'N' and 'H'. 
+condition_names <- c('H' = "Hypoxia", 'N' = "Normoxia")
+
+#Plotting each condition separately across the three time points (this replicates Day 0 readings for both conditions
+#as they were not in either hypoxia or normoxia at this point)
+plot_1 <- ggplot(data=rawdata_stats, aes(x=Strain, y=CFU_mean, fill=Day)) +
+  geom_col(position = position_dodge()) +
+  facet_wrap(Condition ~ ., labeller = as_labeller(condition_names)) +
+  theme_bw()
+```
+
+```{r plot_1, echo=FALSE}
+plot(plot_1)
+```
+
