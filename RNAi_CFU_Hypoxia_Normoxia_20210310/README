@@ -11,3 +11,5 @@ input
 Input file for markdown script. 
 
   - 20210310_RNAi_CFU_Tidy.csv: Tidied raw data from CFU assays. 
+  - Raw_CFU_calculations.xlsx: Raw dataset for hand counted colonies from range of dilutions onto YPD medium, meam CFU counts per ml transfrered to 20210310_RNAi_CFU_Tidy.csv
+    for data analysis. 
