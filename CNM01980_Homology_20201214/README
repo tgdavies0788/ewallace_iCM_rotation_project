@@ -1,0 +1,40 @@
+Virtual rotation project exploring orthodoxy of a putative RNA binding protein (UNiProt Ref:Q5K7L9, Gene Ref:CNM01980) in C. neoformans. 
+
+FASTA_Orthologues
+
+FASTA sequences for characterised orthologues identified via PantherDB searching against CNM01980 sequence. Descriptions corresponding to .fasta files below. 
+
+Q5K7L9: Putative RBP from C. Neoformans (CNM01980)
+
+DHX57 – Uncharacterized, probable ATP-binding RNA helicase. C3H1 zinc finger associated with mRNA 3’UTR binding. UBA/RWD ubiquitin associated domains.   
+
+DHX29 – Involved in translation initiation in mammals, required for mRNA with structured 5’UTRs. Binds 40S ribosome near mRNA entrance. Non processive helicase 	activity. 
+
+TDRD9 - Acts downstream of piRNA biogenesis in the nucleus, coupled with MIWI2. ATPase activity essential in the process of nuclear accumulation and transcriptional silencing.  
+
+DHX9 (RHA) – Well characterised in many roles, component of siRNA pathway as RISC complex component, N-term dsRBD mutations and co-IP characterise interaction with Ago2 MID domain. 
+
+YTHDC2 – Key role in male and female germline. Binds m6A containing RNAs, binding and promoting degradation. Allowing successful progression of meiotic program.  
+
+DHX36 – Specific unwinding of GR nucleic acid structures, well characterised in DNA and RNA interactions for multiple genes. 
+
+
+Alignments
+
+FASTA alignment files for CMN01980 orthologues, utilised to identify conservation of DEAH box conserved site across selected orthologues
+
+CNM01980_Orthologues_Mafft_Aln.fasta: Mafft alignment FASTA file of FASTA_orthologues against CNM01980. 
+
+InterPro_Domains.png: Visualisation of domain architecture of CMN0980 orthologues, domain classification via InterPro domain classification of FASTA_orthologues. 
+
+
+BLASTp
+
+BLASTp of CNM01980 647-1205aa truncation, representing conserved core conserved domain architecture (see ../Alignments/InterPro_Domains.png), tax-id limited against 76 representative species (see ../curated_76species_taxid.txt) returning top 500 matches. 
+
+curated_76species_taxid.txt: tax-id list of 76 representative species for limiting of BLASTp search. 
+
+BLASTp_CNM01980_aln_seqs.fasta: BLASTp output, top 500 matches from above search. 
+
+mafft_CNM01980_aln_seqs.fasta: Mafft aligned sequences from BLASTp_CNM01980_aln_seqs.fasta. 
+
