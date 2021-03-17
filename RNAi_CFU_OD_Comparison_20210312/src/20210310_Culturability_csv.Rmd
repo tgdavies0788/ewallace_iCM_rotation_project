@@ -1,0 +1,156 @@
+---
+title: "Plate Reader JEC21RNAimutants 8Day culturability assay 30 degrees"
+author: "Liz Hughes and Thom Davies"
+date: "12-03-21"
+output:
+  html_document:
+    toc: yes
+    toc_depth: 2
+  pdf_document:
+    toc: yes
+    toc_depth: '2'
+  word_document:
+    toc: yes
+    toc_depth: '2'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#Plate reader assay.
+
+##Set up to test growth of Jec21 cells compared to RNAi deletion mutants, dcR1-2 and RdRp1. 1 colony for each biorep into 5 ml YPD ON (STAT1), 1:100 dilution of this cututre into 60ml YPD ON (STAT2), 25ml split into 2 flask; 1 incubated at 60rpm, 30 degrees (Hypoxia) and the other incubated at 180rpm, 30 degrees (Normoxia) for 8 days.
+## Use Cfu to count number of cells /ml. Aliquot approx 100 cells/well. Grow at 30 degrees for 5 more days. Take OD 595.
+##2 Bioreps, 5 Techreps each, 3 Strains (JEC21-3084, dcR1-2-6595, RdRp1-6594).
+
+
+```{r}
+
+library(dplyr)
+library(ggplot2)
+library(tidyverse)
+library(markdown)
+
+
+```
+# Read in transposed data as csv file
+
+```{r}
+rawdata <- read.csv("/Users/s2124188/Documents/Physical Rotations/Wallace & Bayne/CFU Assays/OD v Cell No/20210310_All2_csv.csv")
+
+view(rawdata)
+```
+
+# Separate Strain into Strain, BioRep and Condition
+
+```{r separate conditions}
+Data <- separate(rawdata, 
+         Strain, 
+         into = c("Strain" , "BioRep" , "Condition"), 
+         sep = "_", 
+         remove = TRUE)
+view(Data)
+```
+
+
+## Calculate median OD for blank wells to use to normalise data.
+
+```{r calc_blank_medians}
+
+blank_OD_summary <- Data %>%
+  filter(Strain=="blank") %>%
+  group_by(Condition) %>%
+    summarise(OD_median=median(OD595),
+            OD_mean=mean(OD595),
+            OD_max=max(OD595),
+            OD_min=min(OD595))
+print(blank_OD_summary)
+```
+
+# Subtract blank OD to make corrected OD and Plot OD_corrected v Time (hrs)
+## Normalize data
+
+```{r subtract_blank_OD}
+
+normOD <- Data %>%
+  left_join(blank_OD_summary, by="Condition") %>%
+  mutate(OD_corrected = OD595 - OD_median)
+view(normOD)
+```
+
+
+#Create subset dcR
+```{r dcR}
+
+dcR <- normOD %>%
+filter(Strain=="dcR")
+```
+
+
+#Plot dcR, normalised
+```{r plot_dcR}
+
+ggplot(data=dcR, aes(x=Cell_No, y=OD595, color=BioRep)) + 
+         geom_boxplot() + 
+       theme_bw()+
+ facet_wrap(Condition ~.)+
+   labs(x = "Cell_No") +
+   labs(y = "Absorbance 595nm") +
+   labs(title = "dcR") +
+  theme(text = element_text(size = 20))+
+   scale_color_brewer(palette="Set1")
+```
+
+#Create subset RdRp
+```{r RdRp}
+
+RdRp <- normOD %>%
+filter(Strain=="RdRp")
+```
+
+
+#Plot RdRp, normalised
+```{r plot_RdRp}
+
+ggplot(data=RdRp, aes(x=Cell_No, y=OD595, color=BioRep)) + 
+         geom_boxplot() + 
+       theme_bw()+
+ facet_wrap(Condition ~.)+
+   labs(x = "Cell_No") +
+   labs(y = "Absorbance 595nm") +
+   labs(title = "RdRp") +
+  theme(text = element_text(size = 20))+
+   scale_color_brewer(palette="Set1")
+```
+
+#Create subset JEC21
+```{r JEC21}
+
+JEC21 <- normOD %>%
+filter(Strain=="JEC21")
+```
+
+#Plot JEC21, normalised
+```{r plot_JEC21}
+
+ggplot(data=JEC21, aes(x=Cell_No, y=OD595, color=BioRep)) + 
+         geom_boxplot() + 
+       theme_bw()+
+ facet_wrap(Condition ~.)+
+  labs(x = "Cell_No") +
+   labs(y = "Absorbance 595nm") +
+   labs(title = "JEC21") +
+  theme(text = element_text(size = 20))+
+   scale_color_brewer(palette="Set1")
+```
+
+
+
+
+
+
+
+
+
+
